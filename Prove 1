@@ -1,0 +1,98 @@
+from collections import Counter
+
+import sklearn
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+import numpy as np
+
+class HardCodedClassifier:
+    def fit(self, data, target):
+        h = HardCodedModel()
+        return h
+
+
+class HardCodedModel:
+    def predict(self, data):
+        array = []
+        for i in range(45):
+            array.append(0)
+        return array
+
+
+def knnPredict(X_train, y_train, x_test, k):
+    distances = []
+    targets = []
+
+    # Euclidean distance
+    for i in range(len(X_train)):
+
+        distance = np.sqrt(np.sum(np.square(x_test - X_train[i, :])))
+        distances.append([distance, i])
+
+    distances = sorted(distances)
+
+    # Targets
+    for i in range(k):
+        index = distances[i][1]
+        targets.append(y_train[index])
+
+    # Uses dictionaries Counter class
+    return Counter(targets).most_common(1)[0][0]
+
+
+def nearestNeighbor(X_train, y_train, X_test, results, k):
+    for i in range(len(X_test)):
+        results.append(knnPredict(X_train, y_train, X_test[i, :], k))
+
+
+def main():
+    iris = datasets.load_iris()
+
+    # Show the data (the attributes of each instance)
+    #print(iris.data)
+
+    # Show the target values (in numeric format) of each instance
+    #print(iris.target)
+
+    # Show the actual target names that correspond to each number
+    print(iris.target_names)
+
+    X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.3)
+    classifier = GaussianNB()
+    model = classifier.fit(X_train, y_train)
+    targets_predicted = model.predict(X_test)
+
+    print('GaussianNB algorithm: ', sklearn.metrics.accuracy_score(y_test, targets_predicted), '%', sep='')
+
+    classifier = HardCodedClassifier()
+    model = classifier.fit(X_train, y_train)
+    targets_predicted = model.predict(X_test)
+
+    print('Hard Coded algorithm: ', sklearn.metrics.accuracy_score(y_test, targets_predicted), '%', sep='')
+
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+
+    #Sklearn Knn
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+    classifier = KNeighborsClassifier(n_neighbors=5)
+    classifier.fit(X_train, y_train)
+    y_pred = classifier.predict(X_test)
+    print(confusion_matrix(y_test, y_pred))
+    print(classification_report(y_test, y_pred))
+
+    #Knn from scratch
+    results = []
+    nearestNeighbor(X_train, y_train, X_test, results, 7)
+    prediction = np.asarray(results)
+    accuracy = accuracy_score(y_test, prediction) * 100
+    print('The accuracy of the homemade Knn algorithm: ', accuracy, '%', sep='')
+
+
+if __name__ == '__main__':
+    main()
